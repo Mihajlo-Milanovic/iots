@@ -3,20 +3,15 @@
 ## 1. Namena projekta
 
 Sistem prihvata, čuva i analizira **vremensku seriju očitavanja sa IoT senzora**.
-Sastoji se iz dva mikroservisa napisana u **dve različite tehnologije** (zahtev postavke) i
-jednostavne aplikacije koja simulira senzore:
+Sastoji se iz dva mikroservisa napisana u **dve različite tehnologije** i jednostavne aplikacije koja simulira senzore:
 
-- **Gateway** (Java / Spring Boot) — REST API sa OpenAPI specifikacijom; radi CRUD operacije nad
-  očitavanjima i agregacije (min, max, avg, sum) u zadatom vremenskom periodu. Sam ne pristupa
-  bazi — sve prosleđuje DataManager-u preko gRPC-a.
-- **DataManager** (Python / grpcio) — gRPC API sa Protobuf specifikacijom; jedini pristupa
-  PostgreSQL bazi.
-- **SensorGenerator** (Python) — čita CSV sa stvarnim podacima senzora i šalje ih Gateway-u
-  preko REST-a, simulirajući akviziciju u realnom vremenu.
+- **Gateway** (Java / Spring Boot) — REST API sa OpenAPI specifikacijom; radi CRUD operacije nad očitavanjima i agregacije (min, max, avg, sum) u zadatom vremenskom periodu. Sam ne pristupa bazi — sve prosleđuje DataManager-u preko gRPC-a.
+- **DataManager** (Python / grpcio) — gRPC API sa Protobuf specifikacijom; jedini pristupa PostgreSQL bazi.
+- **SensorGenerator** (Python) — čita CSV sa stvarnim podacima senzora i šalje ih Gateway-u preko REST-a, simulirajući akviziciju u realnom vremenu.
 
 ```
-SensorGenerator ──REST──> Gateway ──gRPC──> DataManager ──SQL──> PostgreSQL
-   (Python)          (Java / Spring Boot)   (Python / grpcio)
+SensorGenerator  ──REST──>  Gateway  ──gRPC──>  DataManager  ──SQL──> PostgreSQL
+   (Python)            (Java/Spring Boot)     (Python / grpcio)
 ```
 
 **Zašto ovakva podela:** Gateway je „javno lice" sistema i ne zna ništa o bazi; DataManager je
@@ -25,18 +20,18 @@ zameniti bez diranja pristupa podacima.
 
 ## 2. Tehnologije i portovi
 
-| Komponenta | Tehnologija | Port (host) |
-|---|---|---|
-| Gateway | Java 21, Spring Boot 3.3, springdoc-openapi | **8080** |
-| DataManager | Python 3.12, grpcio, SQLAlchemy | **50051** |
-| PostgreSQL | postgres:16-alpine | **5433** (u kontejneru 5432) |
-| SensorGenerator | Python 3.12, requests | — |
+| Komponenta      | Tehnologija                                 | Port (host)                  |
+| --------------- | ------------------------------------------- | ---------------------------- |
+| Gateway         | Java 21, Spring Boot 3.3, springdoc-openapi | **8080**                     |
+| DataManager     | Python 3.12, grpcio, SQLAlchemy             | **50051**                    |
+| PostgreSQL      | postgres:16-alpine                          | **5433** (u kontejneru 5432) |
+| SensorGenerator | Python 3.12, requests                       | —                            |
 
 ## 3. Struktura foldera
 
 ```
 project-1/
-├── proto/reading.proto        # Protobuf specifikacija - JEDINI izvor za oba servisa
+├── proto/reading.proto        # Protobuf specifikacija - zajednicka za oba servisa
 ├── openapi.yaml               # OpenAPI specifikacija (generisana iz pokrenutog Gateway-a)
 ├── gateway/                   # Spring Boot REST servis
 ├── datamanager/               # Python gRPC servis
@@ -44,8 +39,7 @@ project-1/
 ├── postman/                   # kolekcija za testiranje REST API-ja
 ├── docs/run-docker-run.md     # pokretanje pojedinačnim `docker run` komandama
 ├── docker-compose.yml         # pokretanje celog sistema
-├── README.md                  # kratak pregled
-├── PLAN.md                    # plan implementacije i obrazloženje odluka
+├── README.md                  # sazetak ovog dokumenta
 └── DOCUMENTATION.md           # ovaj dokument
 ```
 
@@ -93,17 +87,18 @@ Indeksi: `(device_id, ts)` i `(ts)` — pokrivaju pretragu po uređaju i periodu
 
 ## 5. API
 
-### REST (Gateway), bazna putanja `/api/v1/readings`
+### REST (Gateway)  
+####  `/api/v1/readings`
 
-| Metod | Putanja | Opis | Uspeh |
-|---|---|---|---|
-| `POST` | `/api/v1/readings` | dodavanje očitavanja | 201 |
-| `POST` | `/api/v1/readings/batch` | grupni unos (koristi SensorGenerator) | 200 |
-| `GET` | `/api/v1/readings/{id}` | dohvatanje po id-u | 200 / 404 |
-| `GET` | `/api/v1/readings?deviceId=&from=&to=&page=&size=` | pretraga i paginacija | 200 |
-| `PUT` | `/api/v1/readings/{id}` | ažuriranje | 200 / 404 |
-| `DELETE` | `/api/v1/readings/{id}` | brisanje | 204 / 404 |
-| `GET` | `/api/v1/readings/aggregate?deviceId=&field=&from=&to=` | min, max, avg, sum, count | 200 |
+| Metod    | Putanja                                                 | Opis                                  | Uspeh     |
+| -------- | ------------------------------------------------------- | ------------------------------------- | --------- |
+| `POST`   | `/api/v1/readings`                                      | dodavanje očitavanja                  | 201       |
+| `POST`   | `/api/v1/readings/batch`                                | grupni unos (koristi SensorGenerator) | 200       |
+| `GET`    | `/api/v1/readings/{id}`                                 | dohvatanje po id-u                    | 200 / 404 |
+| `GET`    | `/api/v1/readings?deviceId=&from=&to=&page=&size=`      | pretraga i paginacija                 | 200       |
+| `PUT`    | `/api/v1/readings/{id}`                                 | ažuriranje                            | 200 / 404 |
+| `DELETE` | `/api/v1/readings/{id}`                                 | brisanje                              | 204 / 404 |
+| `GET`    | `/api/v1/readings/aggregate?deviceId=&field=&from=&to=` | min, max, avg, sum, count             | 200       |
 
 Greške se vraćaju u jedinstvenom formatu; gRPC statusi se mapiraju u HTTP:
 `NOT_FOUND`→404, `INVALID_ARGUMENT`→400, `UNAVAILABLE`→503, ostalo→502.
@@ -116,7 +111,7 @@ Greške se vraćaju u jedinstvenom formatu; gRPC statusi se mapiraju u HTTP:
 
 ## 6. Pokretanje
 
-### A) Docker Compose (preporučeno)
+### A) Docker Compose (preporučljivo)
 
 ```bash
 cd project-1
@@ -162,7 +157,7 @@ Zahteve pokrenuti **redom** — prvi (`01 Create reading`) upisuje `id` u promen
 
 Iz komandne linije:
 ```bash
-newman run postman/IoTS-P1.postman_collection.json
+ npx -y newman run postman/IoTS-P1.postman_collection.json
 ```
 
 ### 7.2 Provera REST-a iz komandne linije
@@ -219,18 +214,10 @@ Očekivano: `id` je `bigint ... default nextval('readings_id_seq')` (BIGSERIAL),
 
 ## 8. Napomene i česti problemi
 
-**Port 5432 je zauzet.** PostgreSQL je namerno izložen na **5433** na hostu. Ako je i 5433
-zauzet, promenite mapiranje u `docker-compose.yml` (`"5433:5432"`); servisi se međusobno
-povezuju preko mreže na port 5432 i to se ne menja.
+**Port 5432 je zauzet.** PostgreSQL je namerno izložen na **5433** na hostu. Ako je i 5433 zauzet, promenite mapiranje u `docker-compose.yml` (`"5433:5432"`); servisi se međusobno povezuju preko mreže na port 5432 i to se ne menja.
 
-**Prvi build Gateway-a je spor.** Maven u kontejneru povlači ceo dependency tree. Naredni
-build-ovi koriste Docker cache i znatno su brži.
+**Prvi build Gateway-a je spor.** Maven u kontejneru povlači ceo dependency tree. Naredni build-ovi koriste Docker cache i znatno su brži.
 
-**Zajednički `.proto`.** `proto/reading.proto` je jedini izvor Protobuf definicije: Gateway ga
-kompajlira `protobuf-maven-plugin`-om (`protoSourceRoot` pokazuje na `../proto`), a DataManager
-`grpc_tools.protoc`-om u toku Docker build-a. Zato se oba image-a grade **iz korena `project-1/`**,
-a ne iz svojih podfoldera. Nije potrebno lokalno instalirati `protoc` ni Maven.
+**Zajednički `.proto`.** `proto/reading.proto` je jedini izvor Protobuf definicije: Gateway ga kompajlira `protobuf-maven-plugin`-om (`protoSourceRoot` pokazuje na `../proto`), a DataManager `grpc_tools.protoc`-om u toku Docker build-a. Zato se oba image-a grade **iz korena `project-1/`**, a ne iz svojih podfoldera. Nije potrebno lokalno instalirati `protoc` ni Maven.
 
-**Generator ne šalje ništa.** Proverite putanju do CSV-a (`--file`) — podrazumevana vrednost je
-relativna (`data/sensor_data.csv`), pa iz korena projekta treba
-`--file sensor-generator/data/sensor_data.csv`.
+**Generator ne šalje ništa.** Proverite putanju do CSV-a (`--file`) — podrazumevana vrednost je relativna (`data/sensor_data.csv`), pa iz korena projekta treba `--file sensor-generator/data/sensor_data.csv`.

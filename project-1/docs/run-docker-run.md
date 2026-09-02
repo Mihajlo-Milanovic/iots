@@ -1,4 +1,4 @@
-# Pokretanje pojedinačnim `docker run` komandama (zahtev 5a)
+# Pokretanje pojedinačnim `docker run` komandama
 
 Sve komande se izvršavaju iz korena `project-1/`.
 

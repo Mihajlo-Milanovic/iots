@@ -96,7 +96,7 @@ gRPC klijent ka DataManageru; REST endpointi:
 
 ## 7. Docker (zahtev 5)
 **a) docker run:**
-```
+```bash
 docker network create iots-net
 docker run -d --name iots-db --network iots-net -e POSTGRES_... -v pgdata:/var/lib/postgresql/data postgres:16
 docker run -d --name datamanager --network iots-net -e DB_HOST=iots-db iots/datamanager
