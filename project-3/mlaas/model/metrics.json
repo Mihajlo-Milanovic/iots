@@ -1,0 +1,100 @@
+{
+  "task": "device_classification",
+  "model": "RandomForestClassifier",
+  "trainedAt": "2026-09-02T09:49:57Z",
+  "trainSeconds": 3.84,
+  "samples": {
+    "total": 149967,
+    "train": 119973,
+    "test": 29994
+  },
+  "windowSize": 12,
+  "featureNames": [
+    "temperature",
+    "humidity",
+    "co",
+    "smoke",
+    "temperature_mean",
+    "temperature_std",
+    "temperature_min",
+    "temperature_max",
+    "temperature_slope",
+    "humidity_mean",
+    "humidity_std",
+    "humidity_min",
+    "humidity_max",
+    "humidity_slope"
+  ],
+  "classes": [
+    "00:0f:00:70:91:0a",
+    "1c:bf:ce:15:ec:4d",
+    "b8:27:eb:bf:9d:51"
+  ],
+  "accuracy": 0.9971,
+  "macroF1": 0.9971,
+  "baselineMajorityClass": {
+    "class": "b8:27:eb:bf:9d:51",
+    "accuracy": 0.4605
+  },
+  "perClass": {
+    "00:0f:00:70:91:0a": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 8337
+    },
+    "1c:bf:ce:15:ec:4d": {
+      "precision": 0.9892,
+      "recall": 1.0,
+      "f1": 0.9945,
+      "support": 7846
+    },
+    "b8:27:eb:bf:9d:51": {
+      "precision": 1.0,
+      "recall": 0.9938,
+      "f1": 0.9969,
+      "support": 13811
+    }
+  },
+  "confusionMatrix": {
+    "labels": [
+      "00:0f:00:70:91:0a",
+      "1c:bf:ce:15:ec:4d",
+      "b8:27:eb:bf:9d:51"
+    ],
+    "matrix": [
+      [
+        8337,
+        0,
+        0
+      ],
+      [
+        0,
+        7846,
+        0
+      ],
+      [
+        0,
+        86,
+        13725
+      ]
+    ]
+  },
+  "featureImportances": {
+    "temperature_max": 0.19001,
+    "temperature": 0.16622,
+    "temperature_mean": 0.16012,
+    "temperature_min": 0.1209,
+    "co": 0.07726,
+    "humidity_max": 0.07459,
+    "smoke": 0.07095,
+    "humidity_mean": 0.06871,
+    "humidity": 0.04376,
+    "humidity_min": 0.02684,
+    "temperature_std": 0.00042,
+    "humidity_std": 0.00015,
+    "temperature_slope": 6e-05,
+    "humidity_slope": 1e-05
+  },
+  "split": "chronological 80/20"
+}

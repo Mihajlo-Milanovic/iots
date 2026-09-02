@@ -1,0 +1,116 @@
+asyncapi: 3.1.0
+
+info:
+  title: IoTS DataManager - MQTT API
+  version: 1.0.0
+  description: |
+    DataManager mikroservis pored upisa u PostgreSQL bazu objavljuje svako
+    očitavanje sa IoT senzora na MQTT topic `iots/readings/{deviceId}`.
+    Poruka se šalje tek nakon uspešnog commit-a u bazu.
+
+servers:
+  mosquitto:
+    host: mosquitto:1883
+    protocol: mqtt
+    description: Mosquitto MQTT broker (TCP listener za mikroservise)
+  mosquitto-ws:
+    host: mosquitto:9001
+    protocol: ws
+    description: Mosquitto WebSocket listener (klijenti u pregledaču)
+
+channels:
+  readings:
+    address: 'iots/readings/{deviceId}'
+    title: Očitavanja sa senzora
+    description: Po jedna poruka za svako očitavanje upisano u bazu.
+    parameters:
+      deviceId:
+        description: Identifikator (MAC adresa) IoT uređaja
+        examples:
+          - 'b8:27:eb:bf:9d:51'
+    messages:
+      reading:
+        $ref: '#/components/messages/Reading'
+
+operations:
+  publishReading:
+    action: send
+    channel:
+      $ref: '#/channels/readings'
+    title: Objavljivanje očitavanja
+    description: |
+      Poziva se iz gRPC metoda `Create` i `BatchCreate`, nakon uspešnog upisa.
+      QoS 1 (at least once), retain = false.
+    messages:
+      - $ref: '#/channels/readings/messages/reading'
+
+components:
+  messages:
+    Reading:
+      name: Reading
+      title: Očitavanje sa IoT senzora
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ReadingPayload'
+      examples:
+        - name: primer
+          payload:
+            id: 12345
+            deviceId: 'b8:27:eb:bf:9d:51'
+            ts: '2020-07-12T00:01:34Z'
+            temperature: 22.7
+            humidity: 51.0
+            co: 0.0049
+            smoke: 0.0204
+            location:
+              lat: 44.8125
+              lon: 20.4612
+
+  schemas:
+    ReadingPayload:
+      type: object
+      required: [id, deviceId, ts]
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identifikator zapisa u bazi
+        deviceId:
+          type: string
+          description: Identifikator uređaja
+        ts:
+          type: string
+          format: date-time
+          description: Vreme očitavanja (ISO-8601, UTC)
+        temperature:
+          type: number
+          format: double
+          description: Temperatura u °C
+        humidity:
+          type: number
+          format: double
+          description: Relativna vlažnost u %
+        co:
+          type: number
+          format: double
+          description: Koncentracija ugljen-monoksida
+        smoke:
+          type: number
+          format: double
+          description: Koncentracija dima
+        location:
+          $ref: '#/components/schemas/Location'
+
+    Location:
+      type: object
+      description: Lokacija uređaja; izostavljena ako koordinate nisu poznate
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          format: double
+          examples: [44.8125]
+        lon:
+          type: number
+          format: double
+          examples: [20.4612]

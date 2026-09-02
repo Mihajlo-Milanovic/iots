@@ -1,0 +1,157 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: iots2-mosquitto
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "1883:1883"    # MQTT preko TCP-a (mikroservisi)
+      - "9001:9001"    # MQTT preko WebSocket-a (MqttClient u pregledaču)
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$$SYS/#' -C 1 -W 3 >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [iots-net]
+
+  db:
+    image: postgres:16-alpine
+    container_name: iots2-db
+    environment:
+      POSTGRES_DB: iots
+      POSTGRES_USER: iots
+      POSTGRES_PASSWORD: iots
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # 5433 na hostu da se izbegne sudar sa lokalnim PostgreSQL-om
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iots -d iots"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [iots-net]
+
+  datamanager:
+    build:
+      context: .
+      dockerfile: datamanager/Dockerfile
+    image: iots/datamanager:2.0.0
+    container_name: iots2-datamanager
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: iots
+      DB_USER: iots
+      DB_PASSWORD: iots
+      GRPC_PORT: "50051"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_TOPIC_PREFIX: iots
+      MQTT_QOS: "1"
+      MQTT_PUBLISH_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    ports:
+      - "50051:50051"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import grpc; from grpc_health.v1 import health_pb2, health_pb2_grpc; health_pb2_grpc.HealthStub(grpc.insecure_channel('localhost:50051')).Check(health_pb2.HealthCheckRequest())\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [iots-net]
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    image: iots/gateway:2.0.0
+    container_name: iots2-gateway
+    environment:
+      DATAMANAGER_HOST: datamanager
+      DATAMANAGER_PORT: "50051"
+      SERVER_PORT: "8080"
+    depends_on:
+      datamanager:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [iots-net]
+
+  eventmanager:
+    build:
+      context: ./eventmanager
+    image: iots/eventmanager:2.0.0
+    container_name: iots2-eventmanager
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_TOPIC_PREFIX: iots
+      MQTT_QOS: "1"
+      HEALTH_PORT: "8000"
+      COOLDOWN_SECONDS: "60"
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [iots-net]
+
+  mqtt-client:
+    build:
+      context: ./mqtt-client
+    image: iots/mqtt-client:2.0.0
+    container_name: iots2-mqtt-client
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [iots-net]
+
+  generator:
+    build:
+      context: ./sensor-generator
+    image: iots/sensor-generator:2.0.0
+    container_name: iots2-generator
+    environment:
+      GATEWAY_URL: http://gateway:8080
+      CSV_FILE: /app/data/sensor_data.csv
+      RATE: "200"
+      BATCH: "100"
+      LIMIT: "4000"
+      # rani deo dataset-a nema prekoračenja pragova (prvi tek na ~47.000. redu),
+      # pa demo kreće od gustog dela da bi EventManager odmah imao šta da detektuje
+      OFFSET: "194000"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    profiles: ["tools"]
+    networks: [iots-net]
+
+volumes:
+  pgdata:
+  mosquitto-data:
+
+networks:
+  iots-net:
+    driver: bridge

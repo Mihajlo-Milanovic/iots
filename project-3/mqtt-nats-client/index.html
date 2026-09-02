@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IoTS MqttNats - događaji i predikcije</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>IoTS MqttNats</h1>
+      <p class="sub">MQTT <code id="mqtt-topic">iots/events/#</code> &nbsp;·&nbsp;
+                     NATS <code id="nats-subject">iots.analytics.predictions.&gt;</code></p>
+    </div>
+    <div class="conn">
+      <span id="mqtt-status" class="badge off">MQTT: nije povezan</span>
+      <span id="nats-status" class="badge off">NATS: nije povezan</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button id="tab-events" class="tab active" data-panel="panel-events">Događaji</button>
+    <button id="tab-predictions" class="tab" data-panel="panel-predictions">Predikcije</button>
+  </nav>
+
+  <!-- ============ DOGAĐAJI (Projekat 2) ============ -->
+  <section id="panel-events" class="panel">
+    <div class="stats">
+      <div class="stat"><span class="num" id="cnt-total">0</span><span class="lbl">ukupno</span></div>
+      <div class="stat crit"><span class="num" id="cnt-critical">0</span><span class="lbl">critical</span></div>
+      <div class="stat warn"><span class="num" id="cnt-warning">0</span><span class="lbl">warning</span></div>
+      <div class="stat"><span class="num" id="cnt-devices">0</span><span class="lbl">uređaja</span></div>
+    </div>
+    <div class="controls">
+      <input type="text" id="filter" placeholder="filter (uređaj, polje, severity)…">
+      <select id="severity">
+        <option value="">sve severity</option>
+        <option value="CRITICAL">samo CRITICAL</option>
+        <option value="WARNING">samo WARNING</option>
+      </select>
+      <button id="pause">pauza</button>
+      <button id="clear">očisti</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>vreme detekcije</th><th>severity</th><th>uređaj</th><th>polje</th>
+        <th class="num-col">vrednost</th><th class="num-col">prag</th><th>lokacija</th><th>topic</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p id="empty" class="empty">Čeka se prvi događaj…</p>
+  </section>
+
+  <!-- ============ PREDIKCIJE (Projekat 3) ============ -->
+  <section id="panel-predictions" class="panel" hidden>
+    <div class="stats">
+      <div class="stat"><span class="num" id="p-total">0</span><span class="lbl">predikcija</span></div>
+      <div class="stat ok"><span class="num" id="p-accuracy">–</span><span class="lbl">tačnost uživo</span></div>
+      <div class="stat"><span class="num" id="p-confidence">–</span><span class="lbl">prosečna pouzdanost</span></div>
+      <div class="stat"><span class="num" id="p-latency">–</span><span class="lbl">prosečna latencija</span></div>
+    </div>
+    <div class="controls">
+      <input type="text" id="p-filter" placeholder="filter (uređaj, predviđena klasa)…">
+      <select id="p-correct">
+        <option value="">sve predikcije</option>
+        <option value="true">samo tačne</option>
+        <option value="false">samo netačne</option>
+      </select>
+      <button id="p-pause">pauza</button>
+      <button id="p-clear">očisti</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>vreme</th><th>stvarni uređaj</th><th>predviđeno</th><th>pouzdanost</th>
+        <th>ishod</th><th class="num-col">latencija</th><th>subject</th>
+      </tr></thead>
+      <tbody id="p-rows"></tbody>
+    </table>
+    <p id="p-empty" class="empty">Čeka se prva predikcija… Analytics šalje najviše jednu po
+      uređaju svake 2 s, i tek kada se napuni prozor od 12 očitavanja.</p>
+  </section>
+
+  <script src="vendor/mqtt.min.js"></script>
+  <script src="app.js"></script>
+  <script type="module" src="nats-app.js"></script>
+</body>
+</html>

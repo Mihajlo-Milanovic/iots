@@ -1,0 +1,312 @@
+openapi: 3.0.1
+info:
+  title: IoTS Gateway API
+  description: REST API za CRUD i agregacije nad očitavanjima IoT senzora. Podaci
+    se čuvaju preko DataManager gRPC mikroservisa (PostgreSQL).
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+tags:
+- name: Readings
+  description: CRUD i agregacije nad očitavanjima IoT senzora
+paths:
+  /api/v1/readings/{id}:
+    get:
+      tags:
+      - Readings
+      summary: Dohvatanje očitavanja po identifikatoru
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadingDto"
+        "404":
+          description: Nije pronađeno
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadingDto"
+    put:
+      tags:
+      - Readings
+      summary: Ažuriranje postojećeg očitavanja
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadingDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadingDto"
+    delete:
+      tags:
+      - Readings
+      summary: Brisanje očitavanja
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Obrisano
+  /api/v1/readings:
+    get:
+      tags:
+      - Readings
+      summary: Pretraga očitavanja po uređaju i vremenskom periodu
+      operationId: search
+      parameters:
+      - name: deviceId
+        in: query
+        description: Identifikator uređaja; izostavljeno = svi uređaji
+        required: false
+        schema:
+          type: string
+          default: ""
+      - name: from
+        in: query
+        description: "Početak perioda, ISO-8601"
+        required: false
+        schema:
+          type: string
+          format: date-time
+        example: 2020-07-12T00:00:00Z
+      - name: to
+        in: query
+        description: "Kraj perioda, ISO-8601"
+        required: false
+        schema:
+          type: string
+          format: date-time
+        example: 2020-07-13T00:00:00Z
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageDto"
+    post:
+      tags:
+      - Readings
+      summary: Dodavanje novog očitavanja
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadingDto"
+        required: true
+      responses:
+        "201":
+          description: Očitavanje kreirano
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadingDto"
+  /api/v1/readings/batch:
+    post:
+      tags:
+      - Readings
+      summary: Grupni unos očitavanja (koristi ga SensorGenerator)
+      operationId: createBatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReadingDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BatchResultDto"
+  /api/v1/readings/aggregate:
+    get:
+      tags:
+      - Readings
+      summary: "Agregacije (min, max, avg, sum) nad poljem u vremenskom periodu"
+      operationId: aggregate
+      parameters:
+      - name: deviceId
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ""
+      - name: field
+        in: query
+        description: temperature | humidity | co | smoke
+        required: false
+        schema:
+          type: string
+          default: temperature
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AggregateDto"
+components:
+  schemas:
+    ReadingDto:
+      required:
+      - deviceId
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identifikator zapisa
+          format: int64
+          readOnly: true
+          example: 1
+        deviceId:
+          type: string
+          description: Identifikator uređaja
+          example: b8:27:eb:bf:9d:51
+        ts:
+          type: string
+          description: Vremenska oznaka očitavanja (ISO-8601 UTC)
+          format: date-time
+          example: 2020-07-12T00:01:34Z
+        temperature:
+          type: number
+          format: double
+          example: 22.7
+        humidity:
+          type: number
+          format: double
+          example: 51.0
+        co:
+          type: number
+          format: double
+          example: 0.0049
+        smoke:
+          type: number
+          format: double
+          example: 0.0204
+        lat:
+          type: number
+          description: Geografska širina
+          format: double
+          example: 44.8125
+        lon:
+          type: number
+          description: Geografska dužina
+          format: double
+          example: 20.4612
+      description: Očitavanje sa IoT senzora
+    BatchResultDto:
+      type: object
+      properties:
+        created:
+          type: integer
+          format: int64
+          example: 500
+      description: Rezultat grupnog unosa
+    PageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReadingDto"
+        total:
+          type: integer
+          format: int64
+          example: 1250
+        page:
+          type: integer
+          format: int32
+          example: 0
+        size:
+          type: integer
+          format: int32
+          example: 50
+      description: Stranica rezultata pretrage
+    AggregateDto:
+      type: object
+      properties:
+        field:
+          type: string
+          example: temperature
+        deviceId:
+          type: string
+          example: b8:27:eb:bf:9d:51
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+        avg:
+          type: number
+          format: double
+        sum:
+          type: number
+          format: double
+        count:
+          type: integer
+          description: Broj obuhvaćenih očitavanja
+          format: int64
+          example: 412
+      description: Agregacije nad izabranim poljem u zadatom vremenskom periodu

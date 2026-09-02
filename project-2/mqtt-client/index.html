@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IoTS MqttClient - događaji</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>IoTS MqttClient</h1>
+      <p class="sub">pretplata na <code id="topic">iots/events/#</code></p>
+    </div>
+    <div class="conn">
+      <span id="status" class="badge off">nije povezan</span>
+      <span id="broker" class="muted"></span>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="stat"><span class="num" id="cnt-total">0</span><span class="lbl">ukupno</span></div>
+    <div class="stat crit"><span class="num" id="cnt-critical">0</span><span class="lbl">critical</span></div>
+    <div class="stat warn"><span class="num" id="cnt-warning">0</span><span class="lbl">warning</span></div>
+    <div class="stat"><span class="num" id="cnt-devices">0</span><span class="lbl">uređaja</span></div>
+  </section>
+
+  <section class="controls">
+    <input type="text" id="filter" placeholder="filter (uređaj, polje, severity)…">
+    <select id="severity">
+      <option value="">sve severity</option>
+      <option value="CRITICAL">samo CRITICAL</option>
+      <option value="WARNING">samo WARNING</option>
+    </select>
+    <button id="pause">pauza</button>
+    <button id="clear">očisti</button>
+  </section>
+
+  <main>
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>vreme detekcije</th><th>severity</th><th>uređaj</th><th>polje</th>
+          <th class="num-col">vrednost</th><th class="num-col">prag</th>
+          <th>lokacija</th><th>topic</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p id="empty" class="empty">Čeka se prvi događaj… Pokrenite SensorGenerator ili pošaljite
+      očitavanje sa vrednošću iznad praga na Gateway.</p>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

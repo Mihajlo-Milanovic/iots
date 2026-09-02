@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: iots-gateway
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+datamanager:
+  host: ${DATAMANAGER_HOST:localhost}
+  port: ${DATAMANAGER_PORT:50051}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

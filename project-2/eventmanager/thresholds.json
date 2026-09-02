@@ -1,0 +1,17 @@
+{
+  "_comment": "Pragovi izvedeni iz stvarnog dataset-a (405.184 očitavanja). Globalni pragovi su oko p99; per-device override postoji jer uređaji imaju bitno različite opsege.",
+  "cooldownSeconds": 60,
+  "global": {
+    "temperature": { "operator": "gt", "threshold": 29.0,   "critical": 30.0,   "unit": "C" },
+    "humidity":    { "operator": "gt", "threshold": 85.0,   "critical": 95.0,   "unit": "%" },
+    "co":          { "operator": "gt", "threshold": 0.0090, "critical": 0.0120, "unit": "ppm" },
+    "smoke":       { "operator": "gt", "threshold": 0.0300, "critical": 0.0400, "unit": "ppm" }
+  },
+  "devices": {
+    "b8:27:eb:bf:9d:51": {
+      "_comment": "Stabilan uređaj (temp 21-24 C, vlažnost 45-63%); globalni pragovi se nikad ne dostižu, pa su spušteni da bi i ovaj uređaj generisao događaje.",
+      "temperature": { "operator": "gt", "threshold": 23.5, "critical": 24.0, "unit": "C" },
+      "humidity":    { "operator": "gt", "threshold": 60.0, "critical": 62.0, "unit": "%" }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package iots.datamanager.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "rs.iots.datamanager.v1";
+option java_outer_classname = "ReadingProto";
+
+// Jedno očitavanje sa IoT senzora.
+message Reading {
+  int64 id = 1;
+  string device_id = 2;
+  google.protobuf.Timestamp ts = 3;
+  double temperature = 4;
+  double humidity = 5;
+  double co = 6;
+  double smoke = 7;
+  optional double lat = 8;
+  optional double lon = 9;
+}
+
+message CreateRequest { Reading reading = 1; }
+message GetRequest { int64 id = 1; }
+
+message ListRequest {
+  string device_id = 1;                  // prazno = svi uređaji
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  int32 page = 4;                        // 0-bazirano
+  int32 page_size = 5;                   // default 50, max 500
+}
+
+message ListResponse {
+  repeated Reading readings = 1;
+  int64 total = 2;
+}
+
+message UpdateRequest {
+  int64 id = 1;
+  Reading reading = 2;
+  repeated string fields = 3;            // prazno = puna zamena
+}
+
+message DeleteRequest { int64 id = 1; }
+message DeleteResponse { bool deleted = 1; }
+
+message AggregateRequest {
+  string device_id = 1;
+  string field = 2;                      // temperature | humidity | co | smoke
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+}
+
+message AggregateResponse {
+  string field = 1;
+  double min = 2;
+  double max = 3;
+  double avg = 4;
+  double sum = 5;
+  int64 count = 6;
+}
+
+message BatchResponse { int64 created = 1; }
+
+service ReadingService {
+  rpc Create      (CreateRequest)    returns (Reading);
+  rpc Get         (GetRequest)       returns (Reading);
+  rpc List        (ListRequest)      returns (ListResponse);
+  rpc Update      (UpdateRequest)    returns (Reading);
+  rpc Delete      (DeleteRequest)    returns (DeleteResponse);
+  rpc Aggregate   (AggregateRequest) returns (AggregateResponse);
+  rpc BatchCreate (stream Reading)   returns (BatchResponse);
+}

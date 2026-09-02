@@ -1,0 +1,6 @@
+grpcio==1.68.1
+grpcio-tools==1.68.1
+grpcio-health-checking==1.68.1
+grpcio-reflection==1.68.1
+SQLAlchemy==2.0.36
+psycopg[binary]==3.2.3

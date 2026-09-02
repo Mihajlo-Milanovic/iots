@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "IoTS Projekat 1 - Gateway REST",
+    "description": "CRUD i agregacije nad IoT očitavanjima preko Gateway mikroservisa.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "deviceId", "value": "b8:27:eb:bf:9d:51" },
+    { "key": "readingId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "01 Create reading",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('readingId', pm.response.json().id);"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/readings", "host": ["{{baseUrl}}"], "path": ["api","v1","readings"] },
+        "body": { "mode": "raw", "raw": "{\n  \"deviceId\": \"{{deviceId}}\",\n  \"ts\": \"2020-07-12T00:01:34Z\",\n  \"temperature\": 22.7,\n  \"humidity\": 51.0,\n  \"co\": 0.0049,\n  \"smoke\": 0.0204,\n  \"lat\": 44.8125,\n  \"lon\": 20.4612\n}" }
+      }
+    },
+    {
+      "name": "02 Batch create",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/readings/batch", "host": ["{{baseUrl}}"], "path": ["api","v1","readings","batch"] },
+        "body": { "mode": "raw", "raw": "[\n  { \"deviceId\": \"{{deviceId}}\", \"ts\": \"2020-07-12T00:02:00Z\", \"temperature\": 23.1, \"humidity\": 50.2, \"co\": 0.0051, \"smoke\": 0.0210 },\n  { \"deviceId\": \"{{deviceId}}\", \"ts\": \"2020-07-12T00:02:20Z\", \"temperature\": 23.4, \"humidity\": 49.9, \"co\": 0.0048, \"smoke\": 0.0198 }\n]" }
+      }
+    },
+    {
+      "name": "03 Get by id",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/readings/{{readingId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","readings","{{readingId}}"] } }
+    },
+    {
+      "name": "04 Search by device and period",
+      "request": { "method": "GET", "url": {
+        "raw": "{{baseUrl}}/api/v1/readings?deviceId={{deviceId}}&from=2020-07-12T00:00:00Z&to=2020-07-13T00:00:00Z&page=0&size=20",
+        "host": ["{{baseUrl}}"], "path": ["api","v1","readings"],
+        "query": [
+          { "key": "deviceId", "value": "{{deviceId}}" },
+          { "key": "from", "value": "2020-07-12T00:00:00Z" },
+          { "key": "to", "value": "2020-07-13T00:00:00Z" },
+          { "key": "page", "value": "0" },
+          { "key": "size", "value": "20" }
+        ] } }
+    },
+    {
+      "name": "05 Update reading",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/readings/{{readingId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","readings","{{readingId}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"deviceId\": \"{{deviceId}}\",\n  \"ts\": \"2020-07-12T00:01:34Z\",\n  \"temperature\": 25.9,\n  \"humidity\": 48.0,\n  \"co\": 0.0052,\n  \"smoke\": 0.0221\n}" }
+      }
+    },
+    {
+      "name": "06 Aggregate (min,max,avg,sum)",
+      "request": { "method": "GET", "url": {
+        "raw": "{{baseUrl}}/api/v1/readings/aggregate?deviceId={{deviceId}}&field=temperature&from=2020-07-12T00:00:00Z&to=2020-07-13T00:00:00Z",
+        "host": ["{{baseUrl}}"], "path": ["api","v1","readings","aggregate"],
+        "query": [
+          { "key": "deviceId", "value": "{{deviceId}}" },
+          { "key": "field", "value": "temperature" },
+          { "key": "from", "value": "2020-07-12T00:00:00Z" },
+          { "key": "to", "value": "2020-07-13T00:00:00Z" }
+        ] } }
+    },
+    {
+      "name": "07 Delete reading",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }],
+      "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/v1/readings/{{readingId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","readings","{{readingId}}"] } }
+    },
+    {
+      "name": "08 Negative - not found (404)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/readings/999999999", "host": ["{{baseUrl}}"], "path": ["api","v1","readings","999999999"] } }
+    },
+    {
+      "name": "09 Negative - validation (400)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/readings", "host": ["{{baseUrl}}"], "path": ["api","v1","readings"] },
+        "body": { "mode": "raw", "raw": "{\n  \"deviceId\": \"\",\n  \"temperature\": 22.0\n}" }
+      }
+    },
+    {
+      "name": "10 Negative - bad aggregate field (400)",
+      "request": { "method": "GET", "url": {
+        "raw": "{{baseUrl}}/api/v1/readings/aggregate?field=nepostojece",
+        "host": ["{{baseUrl}}"], "path": ["api","v1","readings","aggregate"],
+        "query": [{ "key": "field", "value": "nepostojece" }] } }
+    }
+  ]
+}

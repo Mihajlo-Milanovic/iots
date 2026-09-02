@@ -1,0 +1,203 @@
+asyncapi: 3.1.0
+
+info:
+  title: IoTS Analytics - MQTT/NATS API
+  version: 1.0.0
+  description: |
+    Analytics mikroservis se pretplaćuje na MQTT topic sa očitavanjima koji puni
+    DataManager, održava klizni prozor po uređaju (12 uzoraka, ~60 s), poziva
+    MLaaS REST endpoint `/predict` i rezultat modela objavljuje na NATS subject
+    `iots.analytics.predictions.{deviceId}`.
+
+    Model je višeklasni klasifikator uređaja (RandomForest, scikit-learn).
+    Poziv ka MLaaS-u je ograničen na najviše jedan po uređaju u `PREDICT_INTERVAL`
+    sekundi (podrazumevano 2 s), da replay od 200 poruka/s ne bi generisao
+    stotine HTTP zahteva u sekundi.
+
+servers:
+  mosquitto:
+    host: mosquitto:1883
+    protocol: mqtt
+    description: Mosquitto MQTT broker - ulazni tok očitavanja
+  nats:
+    host: nats:4222
+    protocol: nats
+    description: NATS broker - izlazni tok predikcija
+  nats-ws:
+    host: nats:9222
+    protocol: ws
+    description: NATS WebSocket listener - MqttNats aplikacija u pregledaču
+
+channels:
+  readings:
+    address: 'iots/readings/{deviceId}'
+    title: Očitavanja sa senzora (MQTT)
+    description: Ulazni kanal - poruke koje objavljuje DataManager.
+    servers:
+      - $ref: '#/servers/mosquitto'
+    parameters:
+      deviceId:
+        description: Identifikator (MAC adresa) IoT uređaja
+        examples:
+          - 'b8:27:eb:bf:9d:51'
+    messages:
+      reading:
+        $ref: '#/components/messages/Reading'
+
+  predictions:
+    address: 'iots.analytics.predictions.{deviceId}'
+    title: Rezultati ML modela (NATS)
+    description: |
+      Izlazni kanal sa predikcijama modela. NATS koristi tačku kao separator
+      nivoa, pa se dvotačke iz MAC adrese zamenjuju crticom
+      (`b8:27:eb:bf:9d:51` → `b8-27-eb-bf-9d-51`).
+    servers:
+      - $ref: '#/servers/nats'
+      - $ref: '#/servers/nats-ws'
+    parameters:
+      deviceId:
+        description: Identifikator uređaja sa crticama umesto dvotačaka
+        examples:
+          - 'b8-27-eb-bf-9d-51'
+    messages:
+      prediction:
+        $ref: '#/components/messages/Prediction'
+
+operations:
+  consumeReading:
+    action: receive
+    channel:
+      $ref: '#/channels/readings'
+    title: Prijem očitavanja
+    description: Pretplata na `iots/readings/+`, QoS 1, trajna sesija.
+    messages:
+      - $ref: '#/channels/readings/messages/reading'
+
+  publishPrediction:
+    action: send
+    channel:
+      $ref: '#/channels/predictions'
+    title: Objavljivanje rezultata modela
+    description: |
+      Objavljuje se nakon uspešnog poziva MLaaS-a. Ako je MLaaS nedostupan,
+      predikcija se preskače (servis nastavlja da radi) i ništa se ne objavljuje.
+    messages:
+      - $ref: '#/channels/predictions/messages/prediction'
+
+components:
+  messages:
+    Reading:
+      name: Reading
+      title: Očitavanje sa IoT senzora
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ReadingPayload'
+
+    Prediction:
+      name: Prediction
+      title: Rezultat izvršenja ML modela
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PredictionPayload'
+      examples:
+        - name: primer
+          payload:
+            predictionId: '1c:bf:ce:15:ec:4d-12'
+            deviceId: '1c:bf:ce:15:ec:4d'
+            modelTask: device_classification
+            prediction: '1c:bf:ce:15:ec:4d'
+            confidence: 1.0
+            probabilities:
+              '00:0f:00:70:91:0a': 0.0
+              '1c:bf:ce:15:ec:4d': 1.0
+              'b8:27:eb:bf:9d:51': 0.0
+            correct: true
+            windowSize: 12
+            readingId: 12
+            readingTs: '2020-07-12T12:00:00Z'
+            predictedAt: '2026-09-02T09:49:13Z'
+            latencyMs: 64.8
+            location:
+              lat: 44.8
+              lon: 20.4
+
+  schemas:
+    ReadingPayload:
+      type: object
+      required: [id, deviceId, ts]
+      properties:
+        id: { type: integer, format: int64 }
+        deviceId: { type: string }
+        ts: { type: string, format: date-time }
+        temperature: { type: number, format: double }
+        humidity: { type: number, format: double }
+        co: { type: number, format: double }
+        smoke: { type: number, format: double }
+        location:
+          $ref: '#/components/schemas/Location'
+
+    PredictionPayload:
+      type: object
+      required: [predictionId, deviceId, modelTask, prediction, confidence, predictedAt]
+      properties:
+        predictionId:
+          type: string
+          description: '{deviceId}-{readingId}'
+        deviceId:
+          type: string
+          description: Uređaj sa čijeg je toka predikcija napravljena
+        modelTask:
+          type: string
+          enum: [device_classification]
+          description: Zadatak koji model rešava
+        prediction:
+          type: string
+          description: Predviđena klasa (identifikator uređaja)
+        confidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          description: Verovatnoća predviđene klase
+        probabilities:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Verovatnoća za svaku klasu
+        correct:
+          type: boolean
+          description: |
+            Da li se predikcija poklapa sa stvarnim uređajem (poznat je iz MQTT topic-a).
+            Služi ISKLJUČIVO za evaluaciju uživo - nije ulaz u model.
+        windowSize:
+          type: integer
+          description: Broj očitavanja u kliznom prozoru
+        features:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Vrednosti atributa poslate modelu
+        readingId:
+          type: integer
+          format: int64
+        readingTs:
+          type: string
+          format: date-time
+        predictedAt:
+          type: string
+          format: date-time
+        latencyMs:
+          type: number
+          format: double
+          description: Trajanje poziva MLaaS-a u milisekundama
+        location:
+          $ref: '#/components/schemas/Location'
+
+    Location:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat: { type: number, format: double }
+        lon: { type: number, format: double }

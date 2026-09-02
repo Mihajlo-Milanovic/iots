@@ -1,0 +1,217 @@
+{
+  "main": {
+    "id": "11acc6800c190069",
+    "type": "split",
+    "children": [
+      {
+        "id": "11cd2cec8b320d3f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c74beff6f95106e4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "project-1/PLAN.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PLAN"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3f6f7d7efd9da0d6",
+    "type": "split",
+    "children": [
+      {
+        "id": "be9d0d8d0fa573ae",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "400b9888dab69b9f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "89f31fb0038cb90e",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "d9f76b73f84f6149",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d63a76b492016a88",
+    "type": "split",
+    "children": [
+      {
+        "id": "c1e74cdcd284449c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e8669417a1dbcedf",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "project-1/PLAN.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "d514ed27e137cd1f",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "project-1/PLAN.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "cdeea00a21b5efcc",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "ae39c2fc480eb328",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "e63d2b856f6ab477",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "project-1/PLAN.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "c74beff6f95106e4",
+  "lastOpenFiles": [
+    "project-1/IoTS - Projekat 1 - 2025.pdf",
+    "project-1/README.md",
+    "project-1/PLAN.md",
+    "README.md",
+    "project-3/DOCUMENTATION.md",
+    "project-2/DOCUMENTATION.md",
+    "project-1/DOCUMENTATION.md",
+    "project-3/PLAN.md",
+    "project-3/mqtt-nats-client/sedHvKIwq",
+    "project-3/mqtt-nats-client/nats-app.js",
+    "project-3/mqtt-nats-client/vendor/nats.js",
+    "project-3/mqtt-nats-client/vendor/mqtt.min.js",
+    "project-3/mqtt-nats-client/vendor",
+    "project-3/mqtt-nats-client/style.css",
+    "project-3/mqtt-nats-client/nginx.conf",
+    "project-3/mqtt-nats-client/index.html",
+    "project-3/mqtt-nats-client/app.js",
+    "project-3/mqtt-nats-client/Dockerfile",
+    "project-3/README.md",
+    "project-3/docs/run-docker-run.md",
+    "project-2/README.md",
+    "project-2/PLAN.md",
+    "project-2/docs/run-docker-run.md"
+  ]
+}
